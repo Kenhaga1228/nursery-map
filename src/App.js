@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import {
   GoogleMap,
@@ -7,7 +6,13 @@ import {
   useJsApiLoader,
   DirectionsRenderer,
 } from "@react-google-maps/api";
-import './App.css';
+
+const containerStyle = {
+  width: "100%",
+  height: "70vh",
+  borderRadius: "10px",
+  boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+};
 
 const centerTokyo = {
   lat: 35.561,
@@ -36,7 +41,7 @@ function App() {
   const mapRef = useRef(null);
 
   const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
+    googleMapsApiKey: "AIzaSyAs80I-s_12PFfUjpw_hJe5H0Qd8tU31NA", 
   });
 
   useEffect(() => {
@@ -60,7 +65,6 @@ function App() {
 
   const updateNearby = (center) => {
     if (sortAge === "") return;
-
     const distance = (a, b) =>
       Math.sqrt(Math.pow(a.lat - b.lat, 2) + Math.pow(a.lng - b.lng, 2)) * 111000;
 
@@ -94,7 +98,6 @@ function App() {
         if (status === "OK") {
           setDirections(result);
           setSelectedNursery(nursery);
-
           const bounds = new window.google.maps.LatLngBounds();
           result.routes[0].overview_path.forEach((point) => bounds.extend(point));
           mapRef.current?.fitBounds(bounds);
@@ -124,13 +127,14 @@ function App() {
   if (!isLoaded) return <div>読み込み中です...</div>;
 
   return (
-    <div className="container">
-      <div className="main-content">
-        <div className="sidebar">
-          <h2>近くの保育園</h2>
+    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", backgroundColor: "#fef9ef", fontFamily: "'Segoe UI', sans-serif" }}>
+      <div style={{ display: "flex", flex: 1, flexWrap: "wrap" }}>
+        {/* サイドバー */}
+        <div style={{ width: "100%", maxWidth: "300px", padding: "1em", backgroundColor: "#fff4d6", overflowY: "auto", boxShadow: "2px 0 5px rgba(0,0,0,0.1)", flex: "1 1 auto" }}>
+          <h2 style={{ textAlign: "center", color: "#333" }}>近くの保育園</h2>
 
-          <div className="controls">
-            <label>検索範囲: {searchRadius}m</label>
+          <div style={{ marginBottom: "1em", textAlign: "center" }}>
+            <label style={{ fontWeight: "bold" }}>検索範囲: {searchRadius}m</label><br />
             <input
               type="range"
               min="300"
@@ -142,11 +146,12 @@ function App() {
                 setSearchRadius(radius);
                 if (sortAge !== "") updateNearby(selectedPoint || userLocation);
               }}
+              style={{ width: "100%" }}
             />
           </div>
 
-          <div className="controls">
-            <label>空き年齢:</label>
+          <div style={{ marginBottom: "1em", textAlign: "center" }}>
+            <label style={{ fontWeight: "bold", marginRight: "8px" }}>空き年齢:</label>
             <select
               value={sortAge}
               onChange={(e) => {
@@ -154,6 +159,7 @@ function App() {
                 setSortAge(val);
                 if (val !== "") updateNearby(selectedPoint || userLocation);
               }}
+              style={{ padding: "5px", fontSize: "1em", borderRadius: "6px" }}
             >
               <option value="" disabled>年齢を選択してください</option>
               <option value="0">0歳の空き</option>
@@ -165,9 +171,9 @@ function App() {
             </select>
           </div>
 
-          <ul className="nursery-list">
+          <ul style={{ listStyle: "none", padding: 0 }}>
             {nearby.map((n, i) => (
-              <li key={i} onClick={() => handleListClick(n)}>
+              <li key={i} onClick={() => handleListClick(n)} style={{ padding: "10px", backgroundColor: "#fff", marginBottom: "10px", borderRadius: "8px", boxShadow: "0 1px 4px rgba(0,0,0,0.1)", cursor: "pointer" }}>
                 <strong>{n.name}</strong><br />
                 該当地点から {(n.distance).toFixed(0)}m、徒歩{Math.round(n.distance / 80)}分<br />
                 空き{n[`age_${sortAge}`] ?? "-"}人 / 定員{n[`capacity_age_${sortAge}`] ?? "-"}人<br />
@@ -177,22 +183,29 @@ function App() {
           </ul>
         </div>
 
-        <div className="map-area">
-          <h1>保育園空き検索マップ</h1>
+        {/* マップ */}
+        <div style={{ flex: "2 1 600px", padding: "1em" }}>
+          <h1 style={{ textAlign: "center", color: "#333", marginBottom: "0.5em" }}>保育園空き検索マップ</h1>
 
-          <div className="controls-row">
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: "1em" }}>
             <input
               type="text"
               placeholder="例: 池上4-5-2"
               value={inputAddress}
               onChange={(e) => setInputAddress(e.target.value)}
+              style={{ padding: "8px", fontSize: "1em", width: "200px", marginRight: "10px", borderRadius: "6px", border: "1px solid #ccc" }}
             />
-            <button onClick={handleAddressSearch}>検索</button>
+            <button
+              onClick={handleAddressSearch}
+              style={{ padding: "8px 12px", fontSize: "1em", borderRadius: "6px", backgroundColor: "#ffa500", border: "none", color: "#fff", cursor: "pointer" }}
+            >
+              検索
+            </button>
           </div>
 
           <div style={{ position: "relative" }}>
             <GoogleMap
-              mapContainerStyle={{ width: "100%", height: "60vh" }}
+              mapContainerStyle={containerStyle}
               center={selectedPoint || userLocation || centerTokyo}
               zoom={15}
               onLoad={(map) => (mapRef.current = map)}
@@ -219,7 +232,15 @@ function App() {
                   <div>
                     <h4>{selectedNursery.name}</h4>
                     <p>{selectedNursery.address}</p>
-                    <p><a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedNursery.name + " " + selectedNursery.address)}`} target="_blank" rel="noreferrer">Googleマップで見る</a></p>
+                    <p>
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedNursery.name + " " + selectedNursery.address)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Googleマップで見る
+                      </a>
+                    </p>
                     <p style={{ fontSize: "0.8em", color: "#888" }}>更新日: {new Date().toLocaleDateString()}</p>
                   </div>
                 </InfoWindow>
@@ -227,21 +248,28 @@ function App() {
               {directions && <DirectionsRenderer directions={directions} />}
             </GoogleMap>
 
-            <button className="current-location-btn" onClick={() => {
-              if (userLocation) {
-                setSelectedPoint(null);
-                updateNearby(userLocation);
-              }
-            }}>
+            <button
+              style={{ position: "absolute", top: "10px", left: "10px", zIndex: 1, padding: "10px 15px", backgroundColor: "#ffcc00", border: "none", borderRadius: "8px", fontWeight: "bold", cursor: "pointer", boxShadow: "0 2px 6px rgba(0,0,0,0.2)" }}
+              onClick={() => {
+                if (userLocation) {
+                  setSelectedPoint(null);
+                  updateNearby(userLocation);
+                }
+              }}
+            >
               📍 現在地に戻る
             </button>
           </div>
         </div>
       </div>
 
-      <div className="footer">
+      {/* フッター */}
+      <div style={{ textAlign: "center", fontSize: "0.85em", color: "#555", backgroundColor: "#fef9ef", padding: "1em" }}>
         <p>📅 データ更新日: {new Date().toLocaleDateString("ja-JP")}</p>
-        <p>※本サイトの保育園空き情報は、大田区が公開する資料に基づいて作成されています。<br />実際の空き状況と異なる場合があります。詳細は各施設または区役所へご確認ください。</p>
+        <p style={{ maxWidth: "600px", margin: "0 auto", lineHeight: "1.4" }}>
+          ※本サイトの保育園空き情報は、大田区が公開する資料に基づいて作成されています。<br />
+          実際の空き状況と異なる場合があります。詳細は各施設または区役所へご確認ください。
+        </p>
       </div>
     </div>
   );

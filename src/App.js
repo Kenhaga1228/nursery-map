@@ -41,7 +41,7 @@ function App() {
   const mapRef = useRef(null);
 
   const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: "AIzaSyChbmy2pnCHxM1eYYuz3wS-2hGG8QzL_2E", 
+    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
   });
 
   useEffect(() => {
